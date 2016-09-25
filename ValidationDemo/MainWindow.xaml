@@ -1,0 +1,38 @@
+﻿<Window x:Class="ValidationDemo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ValidationDemo"
+        xmlns:v="clr-namespace:Validation.MarkupExtention;assembly=Validation.MarkupExtention"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Text="{Binding ValidationMessage}" />
+
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="200" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50" />
+                <RowDefinition Height="50" />
+                <RowDefinition Height="50" />
+                <RowDefinition Height="50" />
+            </Grid.RowDefinitions>
+            <Label Content="Name:" Grid.Column="0" Grid.Row="0" />
+            <TextBox Text="{v:Validate {Binding Name}}" Height="20" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" />
+            <Label Content="E-mail:" Grid.Column="0" Grid.Row="1" />
+            <TextBox Text="{v:Validate {Binding Email}}" Height="20" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Top" />
+            <Label Content="Address:" Grid.Column="0" Grid.Row="2" />
+            <TextBox Text="{v:Validate {Binding Address}}" Height="20" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Top" />
+            <Button Content="Validate" Grid.Column="1" Grid.Row="3" HorizontalAlignment="Stretch" Click="Button_Click" />
+
+        </Grid>
+    </Grid>
+</Window>
