@@ -12,6 +12,7 @@ namespace ValidationDemo
     {
         public MainWindowViewModel()
         {
+            // TODO: add initial values, disappearing on focus enter
             SuspendValidation();
 
             Email = "enter an email  here";
