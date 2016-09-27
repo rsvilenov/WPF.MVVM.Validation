@@ -9,10 +9,12 @@ namespace Validation.MarkupExtention
     public class ObjectCache
     {
         List<WeakReference<object>> Cache;
+        List<object> _lockList;
 
         ObjectCache()
         {
             Cache = new List<WeakReference<object>>();
+            _lockList = new List<object>();
         }
 
         static ObjectCache _instance;
@@ -25,6 +27,33 @@ namespace Validation.MarkupExtention
                     _instance = new ObjectCache();
                 return _instance;
             }
+        }
+
+        public void LockWithTimeout(int milliseconds)
+        {
+            Lock();
+            Task.Delay(milliseconds)
+                .ContinueWith(t => Unlock());
+        }
+
+        public void Lock()
+        {
+            foreach (var entry in Cache)
+            {
+                // get a hard ref
+                object reference;
+                if (entry.TryGetTarget(out reference))
+                {
+                    // on success, add the hard ref to the list, 
+                    // thus preventing the GC from collecting our object
+                    _lockList.Add(reference);
+                }
+            }
+        }
+
+        public void Unlock()
+        {
+            _lockList.Clear();
         }
 
         void Purge()

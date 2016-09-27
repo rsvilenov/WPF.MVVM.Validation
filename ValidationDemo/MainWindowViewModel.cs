@@ -12,6 +12,12 @@ namespace ValidationDemo
     {
         public MainWindowViewModel()
         {
+            SuspendValidation();
+
+            Email = "enter an email  here";
+
+            ResumeValidation();
+
             ValidationMessages.CollectionChanged += (a, e) => RaisePropertyChanged(() => ValidationMessage);
         }
 

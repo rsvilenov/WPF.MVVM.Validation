@@ -18,6 +18,22 @@ namespace Validation.ViewModel
                 RaisePropertyChanged();
             }
         }
+        
+        public bool IsValidationSuspended
+        {
+            get;
+            private set;
+        }
+
+        protected void SuspendValidation()
+        {
+            IsValidationSuspended = true;
+        }
+
+        protected void ResumeValidation()
+        {
+            IsValidationSuspended = false;
+        }
 
         public void ClearValidationMessages(Expression<Func<object>> exp, ValidationMessageType type = ValidationMessageType.Error)
         {
@@ -67,6 +83,9 @@ namespace Validation.ViewModel
 
         void AddValidationMsg(string msg, string propName, ValidationMessageType type)
         {
+            if (IsValidationSuspended)
+                return;
+
             ValidationMessages.Add(new ValidationMessage(msg, propName, type));
             
             RaiseErrorsChanged(propName);

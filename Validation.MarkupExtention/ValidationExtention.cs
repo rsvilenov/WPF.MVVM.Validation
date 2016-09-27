@@ -12,6 +12,8 @@ namespace Validation.MarkupExtention
 {
     public class ValidateExtension : MarkupExtension
     {
+        const int CACHE_LOCK_TIMEOUT_MS = 1000;
+
         Binding _binding;
         
         public ValidateExtension(Binding binding)
@@ -28,7 +30,7 @@ namespace Validation.MarkupExtention
                 _binding.UpdateSourceTrigger = UpdateSourceTrigger.Explicit;
         }
 
-        void WireUpDataContextEvents(FrameworkElement targetElement)
+        static void WireUpDataContextEvents(FrameworkElement targetElement)
         {
             IProcessedStateProvider processedStateProvider = targetElement.DataContext as IProcessedStateProvider;
 
@@ -37,14 +39,22 @@ namespace Validation.MarkupExtention
                 processedStateProvider.AddMonitoredField(entry.BoundPropertyName);
             }
 
+            // Do we really need to lock the cache here?
+            ObjectCache.Instance.LockWithTimeout(CACHE_LOCK_TIMEOUT_MS);
             if (ObjectCache.Instance.ObjectExists(targetElement.DataContext))
                 return;
 
             INotifyDataErrorOrder errorOrderProvider = targetElement.DataContext as INotifyDataErrorOrder;
             INotifyDataValidationStarted dataValidationStartedProvider = targetElement.DataContext as INotifyDataValidationStarted;
 
-            if (processedStateProvider == null || errorOrderProvider == null || dataValidationStartedProvider == null)
+            if (processedStateProvider != null && errorOrderProvider != null && dataValidationStartedProvider != null)
+            {
+                ObjectCache.Instance.AddObject(targetElement.DataContext);
+            }
+            else
+            {
                 throw new ArgumentException("The provided DataContext do not inherit BaseViewModel");
+            }
 
             WeakEventManager<INotifyDataValidationStarted, DataValidationStartedEventArgs>.AddHandler
                        (dataValidationStartedProvider, "DataValidationStarted", DataValidationStartedProvider_DataValidationStarted);
@@ -52,9 +62,6 @@ namespace Validation.MarkupExtention
                     (errorOrderProvider, "DataErrorOrderChanged", ErrorOrderProvider_DataErrorOrderChanged);
 
             
-
-            if (!ObjectCache.Instance.ObjectExists(targetElement.DataContext))
-                ObjectCache.Instance.AddObject(targetElement.DataContext);
         }
 
         public override object ProvideValue(IServiceProvider serviceProvider)
@@ -100,12 +107,12 @@ namespace Validation.MarkupExtention
             return _binding.ProvideValue(serviceProvider);
         }
 
-        private void OnDataContextChanged(object sender, EventArgs e)
+        private static void OnDataContextChanged(object sender, EventArgs e)
         {
             WireUpDataContextEvents(sender as FrameworkElement);
         }
         
-        private void ErrorOrderProvider_DataErrorOrderChanged(object sender, DataErrorOrderEventArgs e)
+        private static void ErrorOrderProvider_DataErrorOrderChanged(object sender, DataErrorOrderEventArgs e)
         {
             // focus only the first element with failed validation
             if (e.ErrorOrder > 0)
@@ -153,7 +160,7 @@ namespace Validation.MarkupExtention
         }
 
 
-        private void DataValidationStartedProvider_DataValidationStarted(object sender, DataValidationStartedEventArgs e)
+        private static void DataValidationStartedProvider_DataValidationStarted(object sender, DataValidationStartedEventArgs e)
         {
             if (e.FieldValidated)
                 return;
